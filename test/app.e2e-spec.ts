@@ -44,6 +44,11 @@ describe('App e2e', () => {
         email: 'bruno@bruno.com',
         password: '1234',
       }
+
+      const dto2: AuthDto = {
+        email: 'ali@ali.com',
+        password: '1234',
+      }
       it('should throw exception if email empty', () => {
         return pactum
           .spec()
@@ -63,6 +68,7 @@ describe('App e2e', () => {
       it('should throw exception if body empty', () => {
         return pactum.spec().post('/auth/signup').expectStatus(400)
       })
+
       it('should signup', () => {
         return pactum
           .spec()
@@ -71,12 +77,20 @@ describe('App e2e', () => {
           .expectStatus(201)
       })
 
-      it('should throw exception if email used', () => {
+      it('should throw exception if email is taken', () => {
         return pactum
           .spec()
           .post('/auth/signup')
           .withBody(dto)
           .expectStatus(403)
+      })
+
+      it('should signup another user', () => {
+        return pactum
+          .spec()
+          .post('/auth/signup')
+          .withBody(dto2)
+          .expectStatus(201)
       })
     })
 
@@ -124,10 +138,29 @@ describe('App e2e', () => {
           .get('/users/me')
           .withHeaders('Authorization', 'Bearer $S{userAt}')
           .expectStatus(200)
-          .inspect()
       })
     })
-    describe('Edit User', () => {})
+    describe('Edit User', () => {
+      it('should throw exception if updated email is taken', () => {
+        const dto = { email: 'ali@ali.com' }
+        return pactum
+          .spec()
+          .patch('/users')
+          .withBody(dto)
+          .withHeaders('Authorization', 'Bearer $S{userAt}')
+          .expectStatus(403)
+      })
+
+      it('should edit user', () => {
+        const dto = { email: 'bruno@theablab.com', firstName: 'Bruno' }
+        return pactum
+          .spec()
+          .patch('/users')
+          .withBody(dto)
+          .withHeaders('Authorization', 'Bearer $S{userAt}')
+          .expectStatus(200)
+      })
+    })
   })
 
   describe('Bookmarks', () => {
